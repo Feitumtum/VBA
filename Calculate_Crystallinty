@@ -1,0 +1,153 @@
+Sub Calc_Crystallinity()
+'
+' Calc_Crystallinity Macro
+' Designed By: Crystal Lin
+
+' USed this macro to find the area of the peaks based on specifed ranges
+' Use the graph to find the points you want to use
+
+Application.ScreenUpdating = False
+
+' Removes any of the previous peak markers
+Columns("F:F").Select
+    Selection.ClearContents
+    With Selection.Interior
+        .Pattern = xlNone
+        .TintAndShade = 0
+        .PatternTintAndShade = 0
+    End With
+
+
+Dim LastRow As Integer
+LastRow = ActiveSheet.Cells(Rows.Count, 4).End(xlUp).Row
+
+Dim angles(10) As Double
+Dim intensities(10) As Double
+Dim desired_rows(10) As Integer
+Dim Difference As Double
+
+' Maximum of looking for 5 angles
+angles(1) = Range("H13")
+angles(2) = Range("H14")
+
+angles(3) = Range("I13")
+angles(4) = Range("I14")
+
+angles(5) = Range("J13")
+angles(6) = Range("J14")
+
+angles(7) = Range("K13")
+angles(8) = Range("K14")
+
+angles(9) = Range("L13")
+angles(10) = Range("L14")
+
+' For each peak, we find the row with the closet angle
+' Will stop calculation if a peak entry is empty
+
+Dim i As Integer
+
+For i = 1 To 10
+    
+    If angles(i) = 0 Then
+        Exit For
+    End If
+    
+    For j = 28 To LastRow
+        Difference = Range("A" & j).Value - angles(i)
+        If Difference > 0 Then
+            desired_rows(i) = j
+            Range("F" & j).Value = "PEAK " & i \ 2 + i Mod 2
+            Range("F" & j).Interior.ColorIndex = 4
+            intensities(i) = Range("C" & j).Value
+            Exit For
+        End If
+    Next j
+
+Next i
+
+' Uses Trapizodal Formula to intergrate area under curve for all points
+Range("E27").Value = "Area Under Curve"
+Range("E28").Select
+ActiveCell.FormulaR1C1 = "=(RC[-2]+R[1]C[-2])/2*(R[1]C[-4]-RC[-4])"
+Selection.AutoFill Destination:=Range("E28:E" & LastRow - 1)
+
+' Sums up the areas based on the specified peak angle ranges
+' If the peak cells are emoty, the default value for peak area is 0
+
+' Peak 1
+Range("H15").Formula = "=IFERROR(SUM(C" & desired_rows(1) & ":C" & desired_rows(2) & "),0)"
+Range("H16").Value = (intensities(1) + intensities(2)) / 2
+
+' Peak 2
+Range("I15").Formula = "=IFERROR(SUM(C" & desired_rows(3) & ":C" & desired_rows(4) & "),0)"
+Range("I16").Value = (intensities(3) + intensities(4)) / 2
+
+' Peak 3
+Range("J15").Formula = "=IFERROR(SUM(C" & desired_rows(5) & ":C" & desired_rows(6) & "),0)"
+Range("J16").Value = (intensities(5) + intensities(6)) / 2
+
+' Peak 4
+Range("K15").Formula = "=IFERROR(SUM(C" & desired_rows(7) & ":C" & desired_rows(8) & "),0)"
+Range("K16").Value = (intensities(7) + intensities(8)) / 2
+
+' Peak 5
+Range("L15").Formula = "=IFERROR(SUM(C" & desired_rows(9) & ":C" & desired_rows(10) & "),0)"
+Range("L16").Value = (intensities(9) + intensities(10)) / 2
+
+' Subtracting extra area from each peak
+Range("H17").Select
+ActiveCell.FormulaR1C1 = "=R[-2]C-R[-1]C"
+Selection.AutoFill Destination:=Range("H17:L17"), Type:=xlFillDefault
+
+Range("F28").Select
+Selection.FormatConditions.add Type:=xlExpression, Formula1:= _
+    "=LEN(TRIM(F28))>0"
+Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+With Selection.FormatConditions(1).Interior
+    .PatternColorIndex = xlAutomatic
+    .Color = 65535
+    .TintAndShade = 0
+End With
+Selection.FormatConditions(1).StopIfTrue = False
+
+Range("H18:L18").Formula = "=SUM(H17:J17)"
+
+' Put Border Around Table Again
+Range("G12:L18").Select
+    Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+    Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+    With Selection.Borders(xlEdgeLeft)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeTop)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeRight)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlInsideHorizontal)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    
+Application.ScreenUpdating = True
+
+End Sub
