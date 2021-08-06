@@ -1,0 +1,257 @@
+Sub XRD_Plot()
+' This macro will creat two graphs from the XRD data
+' One graph will be the entire data set (intensity vs angle)
+' The other graph will be a zoomed in graph based on the input of a lower and upper bound
+' Upper and Lower bound for the graph will be entered from pop-up boxes
+
+' This macro should be used first since it will make the table to enter where to find the peaks
+
+Application.ScreenUpdating = False
+
+' Initialize Variables
+Dim oChartObj As ChartObject
+Dim LastRow As Long
+
+Dim start_graph As Double
+Dim end_graph As Double
+
+' Gets the bounds of desired graph range (pop up window for user to use)
+start_graph = Application.InputBox("Choose Lower Edge of Graph", , , , , , , 1)
+end_graph = Application.InputBox("Choose Upper Edge of Graph", , , , , , , 1)
+
+
+'Stores the number of the last row
+LastRow = ActiveSheet.Cells(Rows.Count, 4).End(xlUp).Row
+
+' ----------------------------------------------------------------------
+' Makes the OVERALL chart based on Angle and Intensity
+' ----------------------------------------------------------------------
+Set oChartObj = ActiveSheet.ChartObjects.add(Top:=650, Left:=450, Width:=750, Height:=300)
+With oChartObj.Chart
+    .ChartType = xlXYScatterLinesNoMarkers
+    .SeriesCollection.NewSeries
+    .SeriesCollection(1).Name = ActiveSheet.Name
+    .SeriesCollection(1).XValues = ActiveSheet.Range("A28", Range("A28").End(xlDown))
+    .SeriesCollection(1).Values = ActiveSheet.Range("C28", Range("C28").End(xlDown))
+End With
+
+' Changes the graph to lines only and no markers
+oChartObj.Activate
+ActiveChart.FullSeriesCollection(1).Select
+
+' Label x axis
+With ActiveChart.Axes(xlCategory)
+ .HasTitle = True
+ With .AxisTitle
+ .Caption = "Angle"
+ .Font.Name = "bookman"
+ .Font.Size = 10
+ End With
+End With
+
+' Label y axis
+With ActiveChart.Axes(xlValue)
+ .HasTitle = True
+ With .AxisTitle
+ .Caption = "Intensity"
+ .Font.Name = "bookman"
+ .Font.Size = 10
+ End With
+End With
+
+' ----------------------------------------------------------------------
+' Makes the SPECIFIED range graph
+' ----------------------------------------------------------------------
+Dim Difference As Double
+Dim start_row As Integer
+Dim end_row As Integer
+
+' Deafult values (whole grap) Prevent error when user doesn't give input
+start_row = 28
+end_row = LastRow
+
+' Finds the row with the angle closest to the LOWER input
+For i = 28 To LastRow
+Difference = Range("A" & i).Value - start_graph
+
+If Difference > 0 Then
+    start_row = i
+    Exit For
+End If
+
+Next i
+
+' Finds the row with the angle closest to the UPPER input
+For j = 28 To LastRow
+    Difference = Range("A" & j).Value - end_graph
+
+    If Difference > 0 Then
+        end_row = j
+        Exit For
+    End If
+
+Next j
+
+' Makes the graph object and chose the data range
+Set zoomed_ChartObj = ActiveSheet.ChartObjects.add(Top:=300, Left:=450, Width:=750, Height:=300)
+With zoomed_ChartObj.Chart
+    .ChartType = xlXYScatterLinesNoMarkers
+    .SeriesCollection.NewSeries
+    .SeriesCollection(1).Name = ActiveSheet.Name
+    .SeriesCollection(1).XValues = ActiveSheet.Range("A" & start_row, "A" & end_row)
+    .SeriesCollection(1).Values = ActiveSheet.Range("C" & start_row, "C" & end_row)
+End With
+
+' Label the axes
+zoomed_ChartObj.Activate
+ActiveChart.FullSeriesCollection(1).Select
+
+' Label x axis
+With ActiveChart.Axes(xlCategory)
+ .MinimumScale = start_graph
+ .MaximumScale = end_graph
+ .HasTitle = True
+ With .AxisTitle
+ .Caption = "Angle"
+ .Font.Name = "bookman"
+ .Font.Size = 10
+ End With
+End With
+
+' Label y axis
+With ActiveChart.Axes(xlValue)
+ .HasTitle = True
+ With .AxisTitle
+ .Caption = "Intensity"
+ .Font.Name = "bookman"
+ .Font.Size = 10
+ End With
+End With
+
+' Set Up Input For Peaks
+Range("H12") = "Peak 1"
+Range("I12") = "Peak 2"
+Range("J12") = "Peak 3"
+Range("K12") = "Peak 4"
+Range("L12") = "Peak 5"
+Range("H11") = "Enter the start and end angles for where you want to calculate area under the curve"
+
+Range("G13") = "Start Angle"
+Range("G14") = "End Angle"
+Range("G15") = "Area Under Peak"
+Range("G16") = "Extra Area"
+Range("G17") = "Peak Area"
+Range("G18") = "Total Peak Area"
+
+' Formmating and making table look nice
+Range("G12:L18").Select
+    Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+    Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+    With Selection.Borders(xlEdgeLeft)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlEdgeTop)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlEdgeRight)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlInsideVertical)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlInsideHorizontal)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+    Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+    With Selection.Borders(xlEdgeLeft)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeTop)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeRight)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlMedium
+    End With
+    With Selection.Borders(xlInsideVertical)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlInsideHorizontal)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    Columns("G:G").EntireColumn.AutoFit
+    Range("H13:L14").Select
+    With Selection.Interior
+        .Pattern = xlSolid
+        .PatternColorIndex = xlAutomatic
+        .Color = 5296274
+        .TintAndShade = 0
+        .PatternTintAndShade = 0
+    End With
+    Range("H18:L18").Select
+    With Selection
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlBottom
+        .WrapText = False
+        .Orientation = 0
+        .AddIndent = False
+        .IndentLevel = 0
+        .ShrinkToFit = False
+        .ReadingOrder = xlContext
+        .MergeCells = False
+    End With
+    Selection.Merge
+    With Selection.Interior
+        .Pattern = xlSolid
+        .PatternColorIndex = xlAutomatic
+        .Color = 49407
+        .TintAndShade = 0
+        .PatternTintAndShade = 0
+    End With
+
+' Updates the screen after everything is done
+Application.ScreenUpdating = True
+
+End Sub
